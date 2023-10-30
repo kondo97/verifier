@@ -10,14 +10,36 @@ go get github.com/kondo97/verifier
 ## Example
 ```golang
 v := NewVerifier("secret") // It is possible to sign regardless of the type.
+g, err := v.Generate("message")
+```
 
-g, err := v.Generate("message", time.Now().Add(24 * time.Hour), "purpose")
-// g = "eyJNZXNzYWdlIjoiaGVsbG8iLCJFeHBpcmVzQXQiOiIyMDIzLTEwLTMwVDE5OjE1OjA4KzA5OjAwIiwiUHVycG9zZSI6ImV4YW1wbGUifQ==--e58bf06313bf71ec6ab326323124b5c74d1d943056b770681fe425ee8e3bd2d0"
-
+### purpose
+```golang
+v := NewVerifier("secret") 
+g, err := v.Generate("message")
 msg, err := v.Verify(g, "purpose") // msg = "secret"
+msg, err := v.Verify(g, "diffrent purpose") // msg = "", err = "diffrent purpose"
+```
 
-// if expiresAt is expired,
-// msg = "", err = "expired"
+### expiresAt
+```golang
+v := NewVerifier("secret", time.Now().Add(24 * time.Hour)) 
+g, err := v.Generate("message")
+msg, err := v.Verify(g) // msg = "secret"
 
-msg, err := v.Verify(g, "diffrentPurpose") // msg = "", err = "diffrent purpose"
+v := NewVerifier("secret", time.Now().Add(-24 * time.Hour)) 
+g, err := v.Generate("message")
+msg, err := v.Verify(g) // msg = "", err = "expired"
+```
+
+### Rotate
+```golang
+v := NewVerifier("secret") 
+g, err := v.Generate("message")
+
+v2 := NewVerifier("new secret")
+msg, err := v2.Verify(g) //  msg = "", err = "invalid signature"
+
+v2.Rorate("secret")
+msg, err := v2.Verify(g) // msg = "secret"
 ```
